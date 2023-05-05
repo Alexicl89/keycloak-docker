@@ -1,0 +1,39 @@
+version: '3.0'
+volumes:
+  postgres_data:
+    driver: local
+services:
+  postgres:
+    image: postgres:14
+    #    volumes:
+    #      - postgres_data:/var/lib/postgresql/data
+    #    restart: always
+    environment:
+      POSTGRES_DB: archive_dev
+      POSTGRES_USER: archive
+      POSTGRES_PASSWORD: h[bd20@2
+  keycloak:
+    depends_on:
+      - postgres
+    container_name: local_keycloak
+    environment:
+      DB_VENDOR: postgres
+      DB_ADDR: 192.168.83.215
+      DB_PORT: 5432
+      DB_SCHEMA:
+      DB_USER: archive
+      DB_PASSWORD: h[bd20@2
+      KEYCLOAK_USER: admin
+      KEYCLOAK_PASSWORD: admin
+      JGROUPS_DISCOVERY_PROTOCOL: JDBC_PING
+      JGROUPS_DISCOVERY_PROPERTIES: datasource_jndi_name=java:jboss/datasources/KeycloakDS,info_writer_sleep_time=500,initialize_sql="CREATE TABLE IF NOT EXISTS JGROUPSPING ( own_addr varchar(200) NOT NULL, cluster_name varchar(200) NOT NULL, created timestamp default current_timestamp, ping_data BYTEA, constraint PK_JGROUPSPING PRIMARY KEY (own_addr, cluster_name))"
+      KEYCLOAK_LOGLEVEL: WARN
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 120s
+    image: quay.io/keycloak/keycloak:19.0.1
+    ports:
+      - 9090:9090
